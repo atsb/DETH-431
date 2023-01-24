@@ -1,0 +1,128 @@
+#
+# GRX 2.0 Library Makefile for LINUX/X11. Uses GNU Make.
+#
+# set up for GCC / Linux
+#
+
+MAKEDEFS_DIR = ..
+include $(MAKEDEFS_DIR)/makedefs.x11
+
+.PHONY : clean cleanall
+
+INCDIR= -I. -I./include -I../include $(X11INCS)
+
+GRX20SH = ../lib/$(GRX_LIB_SUBDIR)/libgrx20X.so
+GRX20SHli = $(GRX20SH).$(word 1,$(subst ., ,$(GRX_VERSION)))
+GRX20SHna = $(GRX20SH).$(GRX_VERSION)
+
+GRX20ST   = ../lib/$(GRX_LIB_SUBDIR)/libgrx20X.a
+
+ifdef GRX_DEFAULT_FONT_PATH
+CCOPT += -DGRX_DEFAULT_FONT_PATH=$(GRX_DEFAULT_FONT_PATH)
+endif
+
+ifdef SHARED
+CCOPT += -fPIC -D__SHARED__
+endif
+
+ifndef DEBUG
+CCOPT += -fomit-frame-pointer
+endif
+
+OX=.o
+OP=
+include ./stdobjs.mak
+
+STD_O= $(STD_1) $(STD_2)  $(STD_3)  $(STD_4) \
+       $(STD_5) $(STD_6)  $(STD_7)  $(STD_8) \
+       $(STD_9) $(STD_10) $(STD_11) $(STD_12)\
+
+BGI_O= $(BGI_1) $(BGI_2)  $(BGI_3)  $(BGI_4) \
+       $(BGI_5) $(BGI_6)
+
+ADDON_O=
+ifdef DEBUG
+ ADDON_O += utils/dbgprint.o
+endif
+
+ifeq ($(HAVE_LIBTIFF),y)
+  ADDON_O += $(TIF_1)
+endif
+
+ifeq ($(HAVE_LIBJPEG),y)
+  ADDON_O += $(JPG_1)
+endif
+
+ifeq ($(INCLUDE_PRINTING_CODE),y)
+  ADDON_O += $(PRN_1)
+  INCDIR += -I../addons/print
+endif
+
+ifeq ($(INCLUDE_BMP_CODE),y)
+  ADDON_O += $(BMP_1)
+  INCDIR  += -I../addons/bmp
+endif
+
+ifeq ($(INCLUDE_GPC_SUPPORT),y)
+  ADDON_O += $(OP)bgi/gpc_init$(OX) $(OP)bgi/gpc_text$(OX)
+endif
+
+O=      $(STD_O)            \
+	$(ADDON_O)          \
+	$(BGI_O)            \
+	fdrivers/fd_xwin.o  \
+	fdrivers/ram24.o    \
+	fdrivers/ram32l.o   \
+	fdrivers/ram32h.o   \
+	fonts/fdv_xwin.o    \
+	mouse/xwininp.o     \
+	mouse/xwinkeys.o    \
+	vdrivers/vd_xwin.o
+
+ifdef SHARED
+# ------------------------ SHARED
+all: $(GRX20SHna)
+
+$(GRX20SHna): $(LINUX_i386_X11_SHARED) $(O)
+	-rm -f $(GRX20SHna)
+	$(CC) -shared -Wl,-soname,$(notdir $(GRX20SHli)) -o $(GRX20SHna) $(O)
+
+$(O): $(LINUX_i386_X11_SHARED)
+
+else
+# ------------------------- STATIC
+all: $(GRX20ST)
+
+$(GRX20ST): $(LINUX_i386_X11_STATIC) $(O)
+	-rm -f $(GRX20ST)
+	$(AR) -rv $(GRX20ST) $(O)
+	$(RANLIB) $(GRX20ST)
+
+$(O): $(LINUX_i386_X11_STATIC)
+endif
+
+
+$(LINUX_i386_X11_STATIC):
+	-if [ ! -e $(LINUX_i386_X11_STATIC) ]; then rm -f $(SYSTEM_TAG_PREFIX).* $(O); fi
+	touch $(LINUX_i386_X11_STATIC)
+
+$(LINUX_i386_X11_SHARED):
+	-if [ ! -e $(LINUX_i386_X11_SHARED) ]; then rm -f $(SYSTEM_TAG_PREFIX).* $(O); fi
+	touch $(LINUX_i386_X11_SHARED)
+
+clean:
+	rm -f $(O) $(LINUX_i386_X11_STATIC) $(LINUX_i386_X11_SHARED)
+
+cleanall: clean
+	rm -f $(GRX20SHna) $(GRX20SHli) $(GRX20ST)
+
+dep:
+	gcc -MM $(CCOPT) $(INCDIR) $(O:.o=.c) | sed 's#^.*: \(.*\)\.c#\1.o: \1.c#g' >depend.x11
+
+.c.s:
+	$(CC) -S $(CCOPT) -D__XWIN__ $(INCDIR) $*.c -o $*.s
+
+$(O) : %.o : %.c
+	$(CC) -c $(CCOPT) -D__XWIN__ $(INCDIR) $*.c -o $*.o
+
+include depend.x11

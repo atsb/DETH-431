@@ -1,0 +1,31 @@
+# gnuish Makefile
+ 
+OPTIONS = -O3 -m486 -Wall -fomit-frame-pointer -ffast-math -Wno-parentheses
+#OPTIONS = -g -Wall
+
+CC = gcc $(OPTIONS)
+
+SRCS =  deu.c gfx.c draw.c help.c menus.c textures.c levels.c mouse.c \
+        objects.c things.c info.c checks.c prefab.c editobj.c names.c \
+		wads.c readcfg.c edit.c mainloop.c onscreen.c function.c dialog.c
+	
+OBJS = $(SRCS:.c=.o)
+
+deth.exe: $(OBJS)
+	gcc $(OPTIONS) -o deth.exe $(OBJS) -lm -lpc -lbcc -lgrx20 -lemu
+	strip deth.exe
+
+debug: deth
+
+clean:
+	del *.o
+	del deth
+	del deth.exe
+
+zip:
+	pkzip source.zip *.c *.h makefile.*
+
+tags: dummy
+	ctags -r -v *.c *.h
+
+dummy:

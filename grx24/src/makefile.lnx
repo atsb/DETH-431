@@ -1,0 +1,134 @@
+#
+# GRX 2.0 Library Makefile for LINUX/svgalib. Uses GNU Make.
+#
+include ../makedefs.gnu
+
+.PHONY : clean cleanall
+
+INCDIR= -I. -I./include -I../include
+CCOPT += -DLFB_BY_NEAR_POINTER -pipe
+
+ifdef GRX_DEFAULT_FONT_PATH
+CCOPT += -DGRX_DEFAULT_FONT_PATH=$(GRX_DEFAULT_FONT_PATH)
+endif
+
+ifndef DEBUG
+CCOPT += -fomit-frame-pointer
+endif
+
+GRX20SH = ../lib/$(GRX_LIB_SUBDIR)/libgrx20.so
+GRX20SHli = $(GRX20SH).$(word 1,$(subst ., ,$(GRX_VERSION)))
+GRX20SHna = $(GRX20SH).$(GRX_VERSION)
+
+GRX20ST   = ../lib/$(GRX_LIB_SUBDIR)/libgrx20.a
+
+ifdef SHARED
+CCOPT += -fPIC -D__SHARED__
+endif
+
+OX=.o
+OP=
+
+include ./stdobjs.mak
+
+STD_O= $(STD_1) $(STD_2)  $(STD_3)  $(STD_4) \
+       $(STD_5) $(STD_6)  $(STD_7)  $(STD_8) \
+       $(STD_9) $(STD_10) $(STD_11) $(STD_12)
+
+BGI_O= $(BGI_1) $(BGI_2)  $(BGI_3)  $(BGI_4) \
+       $(BGI_5) $(BGI_6)
+
+ADDON_O=
+ifdef DEBUG
+ ADDON_O += $(DBG_1)
+endif
+
+ifeq ($(HAVE_LIBTIFF),y)
+  ADDON_O += $(TIF_1)
+endif
+
+ifeq ($(HAVE_LIBJPEG),y)
+  ADDON_O += $(JPG_1)
+endif
+
+ifeq ($(INCLUDE_PRINTING_CODE),y)
+  ADDON_O += $(PRN_1)
+  INCDIR += -I../addons/print
+endif
+
+ifeq ($(INCLUDE_GPC_SUPPORT),y)
+  ADDON_O += $(OP)bgi/gpc_init$(OX) $(OP)bgi/gpc_text$(OX)
+endif
+
+O=      $(STD_O)                \
+	$(ADDON_O)              \
+	$(BGI_O)                \
+	fdrivers/egavga1.o      \
+	fdrivers/ega4.o         \
+	fdrivers/ram24.o        \
+	fdrivers/ram32l.o       \
+	fdrivers/ram32h.o       \
+	fdrivers/svga16.o       \
+	fdrivers/svga24.o       \
+	fdrivers/svga32h.o      \
+	fdrivers/svga32l.o      \
+	fdrivers/svga4.o        \
+	fdrivers/svga8.o        \
+	fdrivers/vga8x.o        \
+	mouse/lnxinput.o        \
+	mouse/lnxkeys.o         \
+	vdrivers/svgalib.o
+
+ifdef SHARED
+# ------------------------ SHARED
+all: $(GRX20SHna)
+
+$(GRX20SHna): $(LINUX_i386_SVGALIB_SHARED) $(O)
+	-rm -f $(GRX20SHna)
+	$(CC) -shared -Wl,-soname,$(notdir $(GRX20SHli)) -o $(GRX20SHna) $(O)
+
+$(O): $(LINUX_i386_SVGALIB_SHARED)
+
+else
+# ------------------------- STATIC
+all: $(GRX20ST)
+
+$(GRX20ST): $(LINUX_i386_SVGALIB_STATIC) $(O)
+	-rm -f $(GRX20ST)
+	$(AR) -rv $(GRX20ST) $(O)
+	$(RANLIB) $(GRX20ST)
+
+$(O): $(LINUX_i386_SVGALIB_STATIC)
+endif
+
+$(LINUX_i386_SVGALIB_STATIC):
+	if [ ! -e $(LINUX_i386_SVGALIB_STATIC) ]; then rm -f $(SYSTEM_TAG_PREFIX).* $(O); fi
+	touch $(LINUX_i386_SVGALIB_STATIC)
+
+$(LINUX_i386_SVGALIB_SHARED):
+	if [ ! -e $(LINUX_i386_SVGALIB_SHARED) ]; then rm -f $(SYSTEM_TAG_PREFIX).* $(O); fi
+	touch $(LINUX_i386_SVGALIB_SHARED)
+
+clean:
+	rm -f $(O) $(O:.o=.s) $(LINUX_i386_SVGALIB_STATIC) $(LINUX_i386_SVGALIB_SHARED)
+
+cleanall: clean
+	rm -f $(GRX20SHna) $(GRX20SHli) $(GRX20ST)
+
+dep:
+	gcc -MM $(CCOPT) $(INCDIR) $(O:.o=.c) | sed 's#^.*: \(.*\)\.c#\1.o: \1.c#g' >depend.lnx
+
+$(O:.o=.i) : %.i : %.c
+	$(CC) -E $(CCOPT) $(INCDIR) $*.c > $*.i
+
+$(O:.o=.dm) : %.dm : %.c
+	$(CC) -dM -E $(CCOPT) $(INCDIR) $*.c > $*.dm
+
+.c.s:
+	$(CC) -S $(CCOPT)  $(INCDIR) $*.c -o $*.s
+
+.c.o:
+	$(CC) -c $(CCOPT)  $(INCDIR) $*.c -o $*.o
+
+include depend.lnx
+

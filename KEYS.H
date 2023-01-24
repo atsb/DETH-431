@@ -1,0 +1,80 @@
+#define CTRL_2		768
+#define CTRL_6		1822
+
+#define CTRL_A		7681
+#define CTRL_B		12290
+#define CTRL_C		11779
+#define CTRL_D		8196
+#define CTRL_E		4613
+#define CTRL_F		8454
+#define CTRL_G		8711
+#define CTRL_H		8968
+#define CTRL_J		9226
+#define CTRL_K		9483
+#define CTRL_L		9740
+#define CTRL_M		12813
+#define CTRL_N		12558
+#define CTRL_O		6159
+#define CTRL_P		6416
+#define CTRL_Q		4113
+#define CTRL_R		4882
+#define CTRL_S		7955
+#define CTRL_T		5140
+#define CTRL_U		5653
+#define CTRL_V		12054
+#define CTRL_W		4375
+#define CTRL_X		11544
+#define CTRL_Y		5401
+
+#define ESCAPE		545
+#define ENTER		7181
+#define MINUS		3117
+#define PAGEUP		20736
+#define PAGEDOWN	18688
+#define HOME		18176
+#define END			20224
+#define INSERT		20992
+#define DELETE		21248
+#define CURS_UP		18432
+#define CURS_DOWN	20480
+#define CURS_LEFT	19200
+#define CURS_RIGHT	19712
+#define TAB			3849
+
+#define F1			15104
+#define F2			15360
+#define F3			15616
+#define F4			15872
+#define F5			16128
+#define F6			16384
+#define F7			16640
+#define F8			16896
+#define F9			17152
+#define F10			17408
+
+#define SHIFT_F1	21504
+#define SHIFT_F2	21760
+#define SHIFT_F3	22016
+#define SHIFT_F4	22272
+#define SHIFT_F5	22528
+#define SHIFT_F6	22784
+#define SHIFT_F7	23040
+#define SHIFT_F8	23296
+#define SHIFT_F9	23552
+#define SHIFT_F10	23808
+
+#define KEY_C		11875
+#define KEY_E		4709
+#define KEY_F		8550
+#define KEY_L		9836
+#define KEY_N		12654
+#define KEY_O		6255
+#define KEY_Q		4209
+#define KEY_U		5749
+#define KEY_V		12150
+#define KEY_W		4471
+
+#define SHIFT_C		11843
+#define SHIFT_E		4677
+#define SHIFT_F		8518
+
